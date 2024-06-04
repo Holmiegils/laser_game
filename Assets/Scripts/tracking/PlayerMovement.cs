@@ -1,17 +1,33 @@
 using System.Collections;
 using System.Collections.Generic;
+//using System.Media;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class PlayerMovement : MonoBehaviour
 {
+    private AudioSource backSong;
+    private AudioSource gameOverSound;
+
     public Quaternion q;
     public bool manual;
-    public UnityEngine.UI.Text gameOverText; // Make this public to assign in Inspector
+    public UnityEngine.UI.Text gameOverText;
 
     void Start()
     {
+        GameObject backAudioObject = GameObject.Find("BackSong");
+        if (backAudioObject != null)
+        {
+            backSong = backAudioObject.GetComponent<AudioSource>();
+        }
+
+        GameObject gameOverAudioObject = GameObject.Find("gameOverSound");
+        if (gameOverAudioObject != null)
+        {
+            gameOverSound = gameOverAudioObject.GetComponent<AudioSource>();
+        }
+
         UnityEngine.Debug.Log("PlayerMovement script started.");
 
         if (gameOverText != null)
@@ -23,11 +39,11 @@ public class PlayerMovement : MonoBehaviour
         {
             UnityEngine.Debug.LogError("GameOverText reference is not set.");
         }
-    }
 
-    void Update()
-    {
-        // No need to log every frame unless needed for debugging
+        if (gameOverSound != null)
+        {
+            gameOverSound.playOnAwake = false;
+        }
     }
 
     public void setPosition(Vector3 pos)
@@ -48,7 +64,29 @@ public class PlayerMovement : MonoBehaviour
         {
             UnityEngine.Debug.Log("Laser hit detected.");
             ShowGameOverText();
-            Invoke("EndGame", 2.0f); // Delay ending the game to show the text
+
+            if (backSong != null)
+            {
+                backSong.Stop();
+            }
+
+            GameObject lasers = GameObject.Find("Lasers");
+            GameObject buttons = GameObject.Find("buttons");
+            lasers.SetActive(false);
+            buttons.SetActive(false);
+
+            AudioSource[] allAudioSources = FindObjectsOfType<AudioSource>();
+            foreach (AudioSource audioSource in allAudioSources)
+            {
+                audioSource.Stop();
+            }
+
+            if (gameOverSound != null)
+            {
+                gameOverSound.Play();
+            }
+
+            Invoke("EndGame", 3.0f); // Delay ending the game to show the text
         }
     }
 
@@ -68,6 +106,6 @@ public class PlayerMovement : MonoBehaviour
     void EndGame()
     {
         UnityEngine.Debug.Log("EndGame called.");
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        SceneManager.LoadScene("level_1");
     }
 }
